@@ -1,0 +1,6 @@
+.terraform
+*.tfstate
+*.tfvars
+*.plan
+
+node_modules
