@@ -23,17 +23,17 @@ const solrBackup = async (event) => {
   if (event.collection) {
     return await cluster.backup(event.collection);
   } else if (event.collections) {
-    return await backupMultiple(collections);
+    return await backupMultiple(cluster, collections);
   } else {
     const state = await cluster.status();
     const collections = Object.keys(state.cluster.collections);
-    return await backupMultiple(collections);
+    return await backupMultiple(cluster, collections);
   }
 };
 
 const backupMultiple = async (cluster, collections) => {
   const result = {};
-  for (collection of collections) {
+  for (const collection of collections) {
     result[collection] = await cluster.backup(collection);
   }
   return result;
