@@ -40,6 +40,7 @@ module "lambda" {
   handler                = "index.handler"
   runtime                = "nodejs14.x"
   source_path            = "${path.module}/lambda"
+  timeout                = 30
   vpc_subnet_ids         = module.core.outputs.vpc.private_subnets.ids
   vpc_security_group_ids = [
     module.solrcloud.outputs.solr.client_security_group,

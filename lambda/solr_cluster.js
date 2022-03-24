@@ -35,7 +35,7 @@ class SolrCluster {
 
   async restore(collection, name, backupId) {
     if (!name) name = collection;
-    console.log(`Restoring up ${collection} from ${name}:${backupId || 'LATEST'}`);
+    console.log(`Restoring ${collection} from ${name}:${backupId || 'LATEST'}`);
     const location = process.env.SOLR_BACKUP_LOCATION || defaultBackupLocation;
     return await this.#request('RESTORE', { collection, name, location, backupId });
   }
