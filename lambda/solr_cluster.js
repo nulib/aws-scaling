@@ -9,12 +9,6 @@ class SolrCluster {
 
   constructor(baseURL) {
     this.#client = axios.create({ baseURL });
-
-    if (process.env.DEBUG_MODE) {
-      this.request = async (...params) => {
-        return this.#request(...params);
-      }  
-    }
   }
 
   async status(params) {

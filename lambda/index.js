@@ -1,23 +1,56 @@
 const AWS = require('aws-sdk');
 const SolrCluster = require('./solr_cluster');
 
-const rdsReady = async (instanceId) => {
-  const RDS = new AWS.RDS();
-  const response = await RDS.describeDBInstances({ DBInstanceIdentifier: instanceId }).promise();
-  return response.DBInstances[0].DBInstanceStatus == 'available';
+const handler = async (event, _context) => {
+  switch (event.operation) {
+    case 'flatten':
+      return event.input.flat();
+    case 'length':
+      return event.input.length;
+    case 'flat-length':
+      return event.input.flat().length;
+    case 'backup':
+      return await solrBackup(event);
+    case 'restore':
+      return await solrRestore(event);
+    case 'ready':
+      return await solrReady(event);
+  }
+};
+
+const solrBackup = async (event) => {
+  const cluster = new SolrCluster(event.solr.baseUrl);
+  if (event.collection) {
+    return await cluster.backup(event.collection);
+  } else if (event.collections) {
+    return await backupMultiple(collections);
+  } else {
+    const state = await cluster.status();
+    const collections = Object.keys(state.cluster.collections);
+    return await backupMultiple(collections);
+  }
+};
+
+const backupMultiple = async (cluster, collections) => {
+  const result = {};
+  for (collection in collections) {
+    result[collection] = await cluster.backup(collection);
+  }
+  return result;
+};
+
+const solrRestore = async (event) => {
+  const cluster = new SolrCluster(event.solr.baseUrl);
+  const collection = event.collection;
+  const name = event.name || collection;
+  return await cluster.restore(collection, name, event.backupId);
 }
 
-const solrReady = async () => {
-  const cluster = new SolrCluster(process.env.SOLR_BASE_URL);
-  const desiredNodes = Number(process.env.SOLR_NODES);
+const solrReady = async (event) => {
+  const cluster = new SolrCluster(event.solr.baseUrl);
+  const desiredNodes = Number(event.solr.nodeCount);
   const liveNodes = await cluster.liveNodeCount();
   return liveNodes == desiredNodes;
-}
+};
 
-const setInstanceCount = async (cluster, service, desiredCount) => {
-  const ECS = new AWS.ECS();
-  const { service } = await ECS.updateService({ cluster, service, desiredCount }).promise();
-  return service;
-}
-
-module.exports = { rdsReady, solrReady, setInstanceCount };
+module.exports = { handler };
