@@ -33,7 +33,7 @@ const solrBackup = async (event) => {
 
 const backupMultiple = async (cluster, collections) => {
   const result = {};
-  for (collection in collections) {
+  for (collection of collections) {
     result[collection] = await cluster.backup(collection);
   }
   return result;
