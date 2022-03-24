@@ -21,6 +21,7 @@ class SolrCluster {
   }
 
   async backup(collection, name) {
+    console.log(`Backing up ${collection} to ${name}`);
     const location = process.env.SOLR_BACKUP_LOCATION || defaultBackupLocation;
     const maxNumBackupPoints = process.env.SOLR_BACKUP_RETENTION || defaultBackupRetention;
     if (!name) name = collection;
@@ -33,6 +34,7 @@ class SolrCluster {
   }
 
   async restore(collection, name, backupId) {
+    console.log(`Restoring up ${collection} from ${name}:${backupId || 'LATEST'}`);
     const location = process.env.SOLR_BACKUP_LOCATION || defaultBackupLocation;
     if (!name) name = collection;
     return await this.#request('RESTORE', { collection, name, location, backupId });
