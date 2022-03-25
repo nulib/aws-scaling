@@ -2,8 +2,7 @@
 
 ## Description
 
-This repository includes code and Terraform manifests for an AWS Lambda and AWS Step Functions to reliably start and stop 
-resources within the NUL RDC staging environment as follows:
+This repository includes code and Terraform manifests for an AWS Lambda and AWS Step Functions to reliably start and stop resources within the NUL RDC staging environment as follows:
 
 ### Spin Down
 
@@ -26,30 +25,12 @@ resources within the NUL RDC staging environment as follows:
 
 ## Execution
 
-### Spin Down
-
-To spin down the staging environment, execute the `stack-s-spin-down-environment` Step Function with the following payload:
+To spin the staging environment up or down, execute the `stack-s-spin-up-environment` or `stack-s-spin-down-environment` Step Function, respectively, with the following payload:
 
 ```json
 {
-  "Solr": {
-    "baseUrl": "http://Solr.internal.rdc-staging.library.northwestern.edu:8983/Solr/",
-  },
-  "rds": {
-    "meadow": "meadow-db",
-    "stack": "stack-s-db"
-  }
-}
-```
-
-### Spin Up
-
-To spin up the staging environment, execute the `stack-s-spin-up-environment` Step Function with the following payload:
-
-```json
-{
-  "Solr": {
-    "baseUrl": "http://Solr.internal.rdc-staging.library.northwestern.edu:8983/Solr/",
+  "solr": {
+    "baseUrl": "http://solr.internal.rdc-staging.library.northwestern.edu:8983/solr/",
     "collections": ["arch", "avr"]
   },
   "rds": {
