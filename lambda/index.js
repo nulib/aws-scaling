@@ -17,7 +17,7 @@ const solrBackup = async (event) => {
   if (event.collection) {
     return await cluster.backup(event.collection);
   } else if (event.collections) {
-    return await backupMultiple(cluster, collections);
+    return await backupMultiple(cluster, event.collections);
   } else {
     const state = await cluster.status();
     const collections = Object.keys(state.cluster.collections);
@@ -37,7 +37,10 @@ const solrRestore = async (event) => {
   const cluster = new SolrCluster(event.solr.baseUrl);
   const collection = event.collection;
   const name = event.name || collection;
-  return await cluster.restore(collection, name, event.backupId);
+  const failIfExists = event.failIfExists === true;
+  const backupId = event.backupId;
+
+  return await cluster.restore(collection, name, { backupId, failIfExists });
 }
 
 const solrReady = async (event) => {

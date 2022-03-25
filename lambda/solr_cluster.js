@@ -33,9 +33,22 @@ class SolrCluster {
     return await this.#request('LISTBACKUP', { name, location });
   }
 
-  async restore(collection, name, backupId) {
-    if (!name) name = collection;
+  async restore(collection, name, options) {
+    if (name === undefined) name = collection;
+    if (options === undefined) options = { failIfExists: true }
+    let { backupId, failIfExists } = options;
+    failIfExists = !!failIfExists;
+
+    if (!failIfExists) {
+      const state = await this.status();
+      if (collection in state.cluster.collections) {
+        console.warn(`Collection ${collection} exists. Ignoring.`);
+        return true;
+      }
+    }
+
     console.log(`Restoring ${collection} from ${name}:${backupId || 'LATEST'}`);
+    
     const location = process.env.SOLR_BACKUP_LOCATION || defaultBackupLocation;
     return await this.#request('RESTORE', { collection, name, location, backupId });
   }
@@ -79,7 +92,9 @@ class SolrCluster {
       }
     }
     const query = new URLSearchParams(params).toString();
-    const response = await this.#client.get(`/admin/collections?action=${action}&${query}`);
+    const url = `/admin/collections?action=${action}&${query}`;
+    console.log(`Requesting ${url}`);
+    const response = await this.#client.get(url);
     if (response.status < 300) {
       return response.data;
     }
