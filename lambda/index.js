@@ -3,12 +3,6 @@ const SolrCluster = require('./solr_cluster');
 
 const handler = async (event, _context) => {
   switch (event.operation) {
-    case 'flatten':
-      return event.input.flat();
-    case 'length':
-      return event.input.length;
-    case 'flat-length':
-      return event.input.flat().length;
     case 'backup':
       return await solrBackup(event);
     case 'restore':

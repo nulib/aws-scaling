@@ -1,0 +1,73 @@
+{
+  "Comment": "Update Service Counts\nParameters: \n{\n  \"Cluster\": \"my-cluster\", \n  \"Services\": [\n    {\"Name\": \"service-1\", \"DesiredCount\": 0}, \n    {\"Name\": \"service-2\", \"DesiredCount\": 1}\n  ]\n}",
+  "StartAt": "Update Service Counts",
+  "States": {
+    "Update Service Counts": {
+      "Type": "Map",
+      "End": true,
+      "Iterator": {
+        "StartAt": "Normalize Input",
+        "States": {
+          "Normalize Input": {
+            "Type": "Pass",
+            "Next": "Update Service Count",
+            "Parameters": {
+              "serviceInfo": {
+                "Cluster.$": "$$.Execution.Input.Cluster",
+                "Service.$": "$.Name",
+                "DesiredCount.$": "$.DesiredCount"
+              }
+            }
+          },
+          "Update Service Count": {
+            "Type": "Task",
+            "Next": "Get Running Task Count",
+            "Parameters": {
+              "Cluster.$": "$.serviceInfo.Cluster",
+              "Service.$": "$.serviceInfo.Service",
+              "DesiredCount.$": "$.serviceInfo.DesiredCount"
+            },
+            "Resource": "arn:aws:states:::aws-sdk:ecs:updateService",
+            "ResultPath": "$.state"
+          },
+          "Get Running Task Count": {
+            "Type": "Task",
+            "Next": "Zero?",
+            "Parameters": {
+              "Cluster.$": "$.serviceInfo.Cluster",
+              "Services.$": "States.Array($.serviceInfo.Service)"
+            },
+            "Resource": "arn:aws:states:::aws-sdk:ecs:describeServices",
+            "ResultPath": "$.state",
+            "ResultSelector": {
+              "count.$": "$.Services[0].RunningCount"
+            }
+          },
+          "Wait": {
+            "Type": "Wait",
+            "Seconds": 30,
+            "Next": "Get Running Task Count"
+          },
+          "Zero?": {
+            "Type": "Choice",
+            "Choices": [
+              {
+                "Not": {
+                  "Variable": "$.state.count",
+                  "NumericEqualsPath": "$.serviceInfo.DesiredCount"
+                },
+                "Next": "Wait"
+              }
+            ],
+            "Default": "Service Down"
+          },
+          "Service Down": {
+            "Type": "Pass",
+            "End": true
+          }
+        }
+      },
+      "ItemsPath": "$.Services"
+    }
+  }
+}
