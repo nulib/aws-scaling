@@ -69,5 +69,6 @@
       },
       "ItemsPath": "$.Services"
     }
-  }
+  },
+  "TimeoutSeconds": 600
 }

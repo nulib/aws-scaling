@@ -1,0 +1,97 @@
+{
+  "Comment": "Ensure RDS Database Instance is available\nParameters: \n{\n    \"DbInstanceIdentifier\": \"my-db-instance\"\n}",
+  "StartAt": "Check Initial DB State",
+  "States": {
+    "Check Initial DB State": {
+      "Type": "Task",
+      "Parameters": {
+        "DbInstanceIdentifier.$": "$$.Execution.Input.DbInstanceIdentifier"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:rds:describeDBInstances",
+      "Next": "Available?",
+      "ResultSelector": {
+        "status.$": "$.DbInstances[0].DbInstanceStatus"
+      }
+    },
+    "Available?": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Or": [
+            {
+              "Variable": "$.status",
+              "StringMatches": "available"
+            },
+            {
+              "Variable": "$.status",
+              "StringMatches": "backing-up"
+            },
+            {
+              "Variable": "$.status",
+              "StringMatches": "storage-optimization"
+            }
+          ],
+          "Next": "Success"
+        },
+        {
+          "Variable": "$.status",
+          "StringMatches": "stopped",
+          "Next": "Start DB"
+        },
+        {
+          "Or": [
+            {
+              "Variable": "$.status",
+              "StringMatches": "creating"
+            },
+            {
+              "Variable": "$.status",
+              "StringMatches": "modifying"
+            },
+            {
+              "Variable": "$.status",
+              "StringMatches": "rebooting"
+            },
+            {
+              "Variable": "$.status",
+              "StringMatches": "starting"
+            }
+          ],
+          "Next": "Wait"
+        }
+      ],
+      "Default": "Failure"
+    },
+    "Wait": {
+      "Type": "Wait",
+      "Seconds": 60,
+      "Next": "Check DB State"
+    },
+    "Start DB": {
+      "Type": "Task",
+      "Next": "Check DB State",
+      "Parameters": {
+        "DbInstanceIdentifier.$": "$$.Execution.Input.DbInstanceIdentifier"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:rds:startDBInstance"
+    },
+    "Check DB State": {
+      "Type": "Task",
+      "Parameters": {
+        "DbInstanceIdentifier.$": "$$.Execution.Input.DbInstanceIdentifier"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:rds:describeDBInstances",
+      "ResultSelector": {
+        "status.$": "$.DbInstances[0].DbInstanceStatus"
+      },
+      "Next": "Available?"
+    },
+    "Success": {
+      "Type": "Succeed"
+    },
+    "Failure": {
+      "Type": "Fail"
+    }
+  },
+  "TimeoutSeconds": 1200
+}

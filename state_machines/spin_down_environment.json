@@ -1,0 +1,201 @@
+{
+  "Comment": "Spin Down Environment\nParameters: \n{\n    \"solr\": {\n      \"baseUrl\": \"http://example.org:8983/solr/\"\n    },\n    \"rds\": {\n      \"meadow\": \"meadow-db\",\n      \"stack\": \"stack-s-db\"\n    }\n}",
+  "StartAt": "Spin Down",
+  "States": {
+    "Spin Down": {
+      "Type": "Parallel",
+      "End": true,
+      "Branches": [{
+          "StartAt": "Spin down Meadow",
+          "States": {
+            "Spin down Meadow": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::states:startExecution.sync:2",
+              "Parameters": {
+                "StateMachineArn": "${update_service_counts_state_machine_arn}",
+                "Input": {
+
+                  "Cluster": "meadow",
+                  "Services": [{
+                    "Name": "meadow",
+                    "DesiredCount": 0
+                  }],
+                  "CalledFrom.$": "$$.Execution.Id"
+                }
+              },
+              "Next": "Stop Meadow DB"
+            },
+            "Stop Meadow DB": {
+              "Type": "Task",
+              "End": true,
+              "Parameters": {
+                "DbInstanceIdentifier.$": "$$.Execution.Input.rds.meadow"
+              },
+              "Resource": "arn:aws:states:::aws-sdk:rds:stopDBInstance"
+            }
+          }
+        },
+        {
+          "StartAt": "Spin Down Samvera Apps",
+          "States": {
+            "Spin Down Samvera Apps": {
+              "Type": "Parallel",
+              "Branches": [{
+                  "StartAt": "Spin down Arch",
+                  "States": {
+                    "Spin down Arch": {
+                      "Type": "Task",
+                      "Resource": "arn:aws:states:::states:startExecution.sync:2",
+                      "Parameters": {
+                        "StateMachineArn": "${update_service_counts_state_machine_arn}",
+                        "Input": {
+
+                          "Cluster": "arch",
+                          "Services": [{
+                              "Name": "arch-webapp",
+                              "DesiredCount": 0
+                            },
+                            {
+                              "Name": "arch-worker",
+                              "DesiredCount": 0
+                            }
+                          ],
+                          "CalledFrom.$": "$$.Execution.Id"
+                        }
+                      },
+                      "End": true
+                    }
+                  }
+                },
+                {
+                  "StartAt": "Spin down AVR",
+                  "States": {
+                    "Spin down AVR": {
+                      "Type": "Task",
+                      "Resource": "arn:aws:states:::states:startExecution.sync:2",
+                      "Parameters": {
+                        "StateMachineArn": "${update_service_counts_state_machine_arn}",
+                        "Input": {
+
+                          "Cluster": "avr",
+                          "Services": [{
+                              "Name": "avr-webapp",
+                              "DesiredCount": 0
+                            },
+                            {
+                              "Name": "avr-worker",
+                              "DesiredCount": 0
+                            }
+                          ],
+                          "CalledFrom.$": "$$.Execution.Id"
+                        }
+                      },
+                      "End": true
+                    }
+                  }
+                }
+              ],
+              "Next": "Parallel"
+            },
+            "Parallel": {
+              "Type": "Parallel",
+              "Branches": [{
+                  "StartAt": "Spin Down Fedora",
+                  "States": {
+                    "Spin Down Fedora": {
+                      "Type": "Task",
+                      "Resource": "arn:aws:states:::states:startExecution.sync:2",
+                      "Parameters": {
+                        "StateMachineArn": "${update_service_counts_state_machine_arn}",
+                        "Input": {
+
+                          "Cluster": "fcrepo",
+                          "Services": [{
+                            "Name": "fcrepo",
+                            "DesiredCount": 0
+                          }],
+                          "CalledFrom.$": "$$.Execution.Id"
+                        }
+                      },
+                      "Next": "Stop Stack DB"
+                    },
+                    "Stop Stack DB": {
+                      "Type": "Task",
+                      "Parameters": {
+                        "DbInstanceIdentifier.$": "$$.Execution.Input.rds.stack"
+                      },
+                      "Resource": "arn:aws:states:::aws-sdk:rds:stopDBInstance",
+                      "End": true
+                    }
+                  }
+                },
+                {
+                  "StartAt": "Lambda Invoke",
+                  "States": {
+                    "Lambda Invoke": {
+                      "Type": "Task",
+                      "Resource": "arn:aws:states:::lambda:invoke",
+                      "OutputPath": "$.Payload",
+                      "Parameters": {
+                        "FunctionName": "${solr_utils_lambda_arn}",
+                        "Payload": {
+                          "operation": "backup",
+                          "solr": {
+                            "baseUrl.$": "$$.Execution.Input.solr.baseUrl"
+                          }
+                        }
+                      },
+                      "Retry": [{
+                        "ErrorEquals": [
+                          "Lambda.ServiceException",
+                          "Lambda.AWSLambdaException",
+                          "Lambda.SdkClientException"
+                        ],
+                        "IntervalSeconds": 2,
+                        "MaxAttempts": 6,
+                        "BackoffRate": 2
+                      }],
+                      "Next": "Spin Down SolrCloud"
+                    },
+                    "Spin Down SolrCloud": {
+                      "Type": "Task",
+                      "Resource": "arn:aws:states:::states:startExecution.sync:2",
+                      "Parameters": {
+                        "StateMachineArn": "${update_service_counts_state_machine_arn}",
+                        "Input": {
+
+                          "Cluster": "solrcloud",
+                          "Services": [{
+                              "Name": "solr",
+                              "DesiredCount": 0
+                            },
+                            {
+                              "Name": "zookeeper-0",
+                              "DesiredCount": 0
+                            },
+                            {
+                              "Name": "zookeeper-1",
+                              "DesiredCount": 0
+                            },
+                            {
+                              "Name": "zookeeper-2",
+                              "DesiredCount": 0
+                            }
+                          ],
+                          "CalledFrom.$": "$$.Execution.Id"
+                        }
+                      },
+                      "End": true
+                    }
+                  }
+                }
+              ],
+              "End": true
+            }
+          }
+        }
+      ]
+    }
+  },
+  "TimeoutSeconds": 3600
+}
