@@ -6,6 +6,7 @@
 #  terraform import aws_cloudwatch_event_target.step_function_execution_events default/StepFunctionsGetEventsForStepFunctionsExecutionRule/StepFunctionsGetEventsForStepFunctionsExecutionRule-Id
 #
 
+# tflint-ignore: aws_resource_missing_tags
 resource "aws_cloudwatch_event_rule" "step_function_execution_events" {
   name          = "StepFunctionsGetEventsForStepFunctionsExecutionRule"
   description   = "This rule is used to notify Step Functions regarding integrated workflow executions"
