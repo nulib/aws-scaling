@@ -130,9 +130,9 @@
                   }
                 },
                 {
-                  "StartAt": "Lambda Invoke",
+                  "StartAt": "Back Up Solr Collections",
                   "States": {
-                    "Lambda Invoke": {
+                    "Back Up Solr Collections": {
                       "Type": "Task",
                       "Resource": "arn:aws:states:::lambda:invoke",
                       "OutputPath": "$.Payload",
