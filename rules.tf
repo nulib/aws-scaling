@@ -12,7 +12,10 @@ locals {
       meadow    = local.meadow_db_name
       stack     = module.data_services.outputs.postgres.instance_name
     }
-  })  
+  })
+
+  # Set the following line to 0 for Standard Time or -1 for Daylight Saving Time
+  dst_offset = -1
 }
 
 data "aws_iam_policy_document" "scaling_rule_assume_role" {
@@ -50,7 +53,7 @@ resource "aws_iam_role" "event_rule_step_function" {
 resource "aws_cloudwatch_event_rule" "spin_up_in_the_morning" {
   name                  = "spin-up-environment"
   description           = "Spin up environment in the morning"
-  schedule_expression   = "cron(00 11 ? * MON-FRI *)"
+  schedule_expression   = "cron(00 ${12 + local.dst_offset} ? * MON-FRI *)"
   is_enabled            = true
   tags                  = local.tags
 }
@@ -66,7 +69,8 @@ resource "aws_cloudwatch_event_target" "spin_up_in_the_morning" {
 resource "aws_cloudwatch_event_rule" "spin_down_in_the_evening" {
   name                  = "spin-down-environment"
   description           = "Spin down environment in the evening"
-  schedule_expression   = "cron(00 01 ? * TUE-SAT *)"
+
+  schedule_expression   = "cron(00 ${02 + local.dst_offset} ? * TUE-SAT *)"
   is_enabled            = true
   tags                  = local.tags
 }
