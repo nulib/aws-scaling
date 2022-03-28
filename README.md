@@ -23,6 +23,8 @@ This repository includes code and Terraform manifests for an AWS Lambda and AWS 
 - Restore `avr` and `arch` Solr collections
 - Start `meadow`, `avr`, and `arch` ECS services
 
+The Terraform manifests also create AWS EventBridge Rules to spin the stack up and down every weekday at 6am and 8pm Central, respectively.
+
 ## Execution
 
 To spin the staging environment up or down, execute the `stack-s-spin-up-environment` or `stack-s-spin-down-environment` Step Function, respectively, with the following payload:
@@ -39,3 +41,5 @@ To spin the staging environment up or down, execute the `stack-s-spin-up-environ
   }
 }
 ```
+
+There is also a `staging-environment` utility script on the staging bastion host that can be used to spin the staging environment up or down on demand.
