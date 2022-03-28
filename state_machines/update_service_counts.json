@@ -32,7 +32,7 @@
           },
           "Get Running Task Count": {
             "Type": "Task",
-            "Next": "Zero?",
+            "Next": "Desired Count?",
             "Parameters": {
               "Cluster.$": "$.serviceInfo.Cluster",
               "Services.$": "States.Array($.serviceInfo.Service)"
@@ -48,7 +48,7 @@
             "Seconds": 30,
             "Next": "Get Running Task Count"
           },
-          "Zero?": {
+          "Desired Count?": {
             "Type": "Choice",
             "Choices": [
               {
@@ -59,9 +59,9 @@
                 "Next": "Wait"
               }
             ],
-            "Default": "Service Down"
+            "Default": "Desired Count Reached"
           },
-          "Service Down": {
+          "Desired Count Reached": {
             "Type": "Pass",
             "End": true
           }

@@ -9,7 +9,8 @@ provider "aws" { }
 locals {
   environment   = module.core.outputs.stack.environment
   namespace     = module.core.outputs.stack.namespace
-  tags          = merge(
+
+  tags = merge(
     module.core.outputs.stack.tags, 
     {
       Component   = "aws-scaling",
@@ -22,6 +23,11 @@ locals {
 module "core" {
   source = "git::https://github.com/nulib/infrastructure.git//modules/remote_state"
   component = "core"
+}
+
+module "data_services" {
+  source = "git::https://github.com/nulib/infrastructure.git//modules/remote_state"
+  component = "data_services"
 }
 
 module "solrcloud" {
