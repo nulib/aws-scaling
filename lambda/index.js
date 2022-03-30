@@ -9,8 +9,15 @@ const handler = async (event, _context) => {
       return await solrRestore(event);
     case 'ready':
       return await solrReady(event);
+    case 'set-log-level':
+      return await setLogLevel(event);
   }
 };
+
+const setLogLevel = async (event) => {
+  const cluster = new SolrCluster(event.solr.baseUrl);
+  return await cluster.setLogLevel(event.level);
+}
 
 const solrBackup = async (event) => {
   const cluster = new SolrCluster(event.solr.baseUrl);
@@ -44,10 +51,15 @@ const solrRestore = async (event) => {
 }
 
 const solrReady = async (event) => {
-  const cluster = new SolrCluster(event.solr.baseUrl);
-  const desiredNodes = Number(event.solr.nodeCount);
-  const liveNodes = await cluster.liveNodeCount();
-  return liveNodes == desiredNodes;
+  try {
+    const cluster = new SolrCluster(event.solr.baseUrl);
+    const desiredNodes = Number(event.solr.nodeCount);
+    const liveNodes = await cluster.liveNodeCount();
+    return liveNodes == desiredNodes;  
+  } catch(err) {
+    console.error(err.code, err.reason);
+    return false;
+  }
 };
 
 module.exports = { handler };
