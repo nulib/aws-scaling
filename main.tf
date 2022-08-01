@@ -39,14 +39,14 @@ data "aws_region" "current" { }
 
 module "lambda" {
   source  = "terraform-aws-modules/lambda/aws"
-  version = "2.35.1"
+  version = "~> 3.3.1"
 
   function_name          = "${local.namespace}-solr-utils"
   description            = "Utility functions for managing a solr cluster"
   handler                = "index.handler"
-  runtime                = "nodejs14.x"
+  runtime                = "nodejs16.x"
   source_path            = "${path.module}/lambda"
-  timeout                = 30
+  timeout                = 120
   vpc_subnet_ids         = module.core.outputs.vpc.private_subnets.ids
   vpc_security_group_ids = [
     module.solrcloud.outputs.solr.client_security_group,
