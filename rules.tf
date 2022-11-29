@@ -34,8 +34,8 @@ data "aws_iam_policy_document" "event_rule_step_function" {
     effect    = "Allow"
     actions   = ["states:StartExecution"]
     resources = [
-      aws_sfn_state_machine.spin_up_environment.arn,
-      aws_sfn_state_machine.spin_down_environment.arn
+      aws_sfn_state_machine.spin_up_meadow.arn,
+      aws_sfn_state_machine.spin_down_meadow.arn
     ]
   }
 }
@@ -51,8 +51,8 @@ resource "aws_iam_role" "event_rule_step_function" {
 }
 
 resource "aws_cloudwatch_event_rule" "spin_up_in_the_morning" {
-  name                  = "spin-up-environment"
-  description           = "Spin up environment in the morning"
+  name                  = "spin-up-morning"
+  description           = "Spin up in the morning"
   schedule_expression   = "cron(00 ${12 + local.dst_offset} ? * MON-FRI *)"
   is_enabled            = true
   tags                  = local.tags
@@ -60,25 +60,33 @@ resource "aws_cloudwatch_event_rule" "spin_up_in_the_morning" {
 
 resource "aws_cloudwatch_event_target" "spin_up_in_the_morning" {
   rule        = aws_cloudwatch_event_rule.spin_up_in_the_morning.name
-  target_id   = "SpinUpEnvironment"
-  arn         = aws_sfn_state_machine.spin_up_environment.arn
+  target_id   = "SpinUpMeadow"
+  arn         = aws_sfn_state_machine.spin_up_meadow.arn
   input       = local.step_function_payload
   role_arn    = aws_iam_role.event_rule_step_function.arn
 }
 
 resource "aws_cloudwatch_event_rule" "spin_down_in_the_evening" {
-  name                  = "spin-down-environment"
-  description           = "Spin down environment in the evening"
+  name                  = "spin-down-evening"
+  description           = "Spin down in the evening"
 
   schedule_expression   = "cron(00 ${02 + local.dst_offset} ? * TUE-SAT *)"
   is_enabled            = true
   tags                  = local.tags
 }
 
-resource "aws_cloudwatch_event_target" "spin_down_in_the_evening" {
+resource "aws_cloudwatch_event_target" "spin_down_meadow_in_the_evening" {
   rule        = aws_cloudwatch_event_rule.spin_down_in_the_evening.name
-  target_id   = "SpinDownEnvironment"
-  arn         = aws_sfn_state_machine.spin_down_environment.arn
+  target_id   = "SpinDownMeadow"
+  arn         = aws_sfn_state_machine.spin_down_meadow.arn
+  input       = local.step_function_payload
+  role_arn    = aws_iam_role.event_rule_step_function.arn
+}
+
+resource "aws_cloudwatch_event_target" "spin_down_arch_avr_in_the_evening" {
+  rule        = aws_cloudwatch_event_rule.spin_down_in_the_evening.name
+  target_id   = "SpinDownArchAndAVR"
+  arn         = aws_sfn_state_machine.spin_down_arch_avr.arn
   input       = local.step_function_payload
   role_arn    = aws_iam_role.event_rule_step_function.arn
 }

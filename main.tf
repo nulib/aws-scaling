@@ -141,8 +141,8 @@ resource "aws_sfn_state_machine" "ensure_db_instance_available" {
   tags        = local.tags
 }
 
-data "template_file" "spin_down_state_machine" {
-  template   = file("${path.module}/state_machines/spin_down_environment.json")
+data "template_file" "spin_down_arch_avr" {
+  template   = file("${path.module}/state_machines/spin_down_arch_avr.json")
 
   vars = {
     update_service_counts_state_machine_arn   = aws_sfn_state_machine.update_service_counts.arn
@@ -150,15 +150,15 @@ data "template_file" "spin_down_state_machine" {
   }
 }
 
-resource "aws_sfn_state_machine" "spin_down_environment" {
-  name        = "${local.namespace}-spin-down-environment"
+resource "aws_sfn_state_machine" "spin_down_arch_avr" {
+  name        = "${local.namespace}-spin-down-arch-and-avr"
   role_arn    = aws_iam_role.scaling_step_function.arn
-  definition  = data.template_file.spin_down_state_machine.rendered
+  definition  = data.template_file.spin_down_arch_avr.rendered
   tags        = local.tags
 }
 
-data "template_file" "spin_up_state_machine" {
-  template   = file("${path.module}/state_machines/spin_up_environment.json")
+data "template_file" "spin_up_arch_avr" {
+  template   = file("${path.module}/state_machines/spin_up_arch_avr.json")
 
   vars = {
     ensure_db_instance_available_state_machine_arn    = aws_sfn_state_machine.ensure_db_instance_available.arn
@@ -167,9 +167,41 @@ data "template_file" "spin_up_state_machine" {
   }
 }
 
-resource "aws_sfn_state_machine" "spin_up_environment" {
-  name        = "${local.namespace}-spin-up-environment"
+resource "aws_sfn_state_machine" "spin_up_arch_avr" {
+  name        = "${local.namespace}-spin-up-arch-and-avr"
   role_arn    = aws_iam_role.scaling_step_function.arn
-  definition  = data.template_file.spin_up_state_machine.rendered
+  definition  = data.template_file.spin_up_arch_avr.rendered
   tags        = local.tags
 }
+
+data "template_file" "spin_down_meadow" {
+  template   = file("${path.module}/state_machines/spin_down_meadow.json")
+
+  vars = {
+    update_service_counts_state_machine_arn   = aws_sfn_state_machine.update_service_counts.arn
+  }
+}
+
+resource "aws_sfn_state_machine" "spin_down_meadow" {
+  name        = "${local.namespace}-spin-down-meadow"
+  role_arn    = aws_iam_role.scaling_step_function.arn
+  definition  = data.template_file.spin_down_meadow.rendered
+  tags        = local.tags
+}
+
+data "template_file" "spin_up_meadow" {
+  template   = file("${path.module}/state_machines/spin_up_meadow.json")
+
+  vars = {
+    ensure_db_instance_available_state_machine_arn    = aws_sfn_state_machine.ensure_db_instance_available.arn
+    update_service_counts_state_machine_arn           = aws_sfn_state_machine.update_service_counts.arn
+  }
+}
+
+resource "aws_sfn_state_machine" "spin_up_meadow" {
+  name        = "${local.namespace}-spin-up-meadow"
+  role_arn    = aws_iam_role.scaling_step_function.arn
+  definition  = data.template_file.spin_up_meadow.rendered
+  tags        = local.tags
+}
+

@@ -1,0 +1,32 @@
+{
+  "Comment": "Spin Down Meadow\nParameters: \n{\n    \"rds\": {\n        \"meadow\": \"meadow-db\"\n    }\n}",
+  "StartAt": "Spin Down Meadow",
+  "States": {
+    "Spin Down Meadow": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::states:startExecution.sync:2",
+      "Parameters": {
+        "StateMachineArn": "${update_service_counts_state_machine_arn}",
+        "Input": {
+
+          "Cluster": "meadow",
+          "Services": [{
+            "Name": "meadow",
+            "DesiredCount": 0
+          }],
+          "CalledFrom.$": "$$.Execution.Id"
+        }
+      },
+      "Next": "Stop Meadow DB"
+    },
+    "Stop Meadow DB": {
+      "Type": "Task",
+      "End": true,
+      "Parameters": {
+        "DbInstanceIdentifier.$": "$$.Execution.Input.rds.meadow"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:rds:stopDBInstance"
+    }
+  },
+  "TimeoutSeconds": 3600
+}
