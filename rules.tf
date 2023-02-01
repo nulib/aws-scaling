@@ -35,7 +35,9 @@ data "aws_iam_policy_document" "event_rule_step_function" {
     actions   = ["states:StartExecution"]
     resources = [
       aws_sfn_state_machine.spin_up_meadow.arn,
-      aws_sfn_state_machine.spin_down_meadow.arn
+      aws_sfn_state_machine.spin_down_meadow.arn,
+      aws_sfn_state_machine.spin_up_arch_avr.arn,
+      aws_sfn_state_machine.spin_down_arch_avr.arn
     ]
   }
 }
