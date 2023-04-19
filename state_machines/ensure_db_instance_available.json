@@ -39,8 +39,7 @@
           "Next": "Start DB"
         },
         {
-          "Or": [
-            {
+          "Or": [{
               "Variable": "$.status",
               "StringMatches": "creating"
             },
@@ -55,6 +54,14 @@
             {
               "Variable": "$.status",
               "StringMatches": "starting"
+            },
+            {
+              "Variable": "$.status",
+              "StringMatches": "configuring-enhanced-monitoring"
+            },
+            {
+              "Variable": "$.status",
+              "StringMatches": "upgrading"
             }
           ],
           "Next": "Wait"
