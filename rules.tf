@@ -57,7 +57,6 @@ resource "aws_cloudwatch_event_rule" "spin_up_in_the_morning" {
   description           = "Spin up in the morning"
   schedule_expression   = "cron(00 ${12 + local.dst_offset} ? * MON-FRI *)"
   is_enabled            = true
-  tags                  = local.tags
 }
 
 resource "aws_cloudwatch_event_target" "spin_up_in_the_morning" {
@@ -74,7 +73,6 @@ resource "aws_cloudwatch_event_rule" "spin_down_in_the_evening" {
 
   schedule_expression   = "cron(00 ${02 + local.dst_offset} ? * TUE-SAT *)"
   is_enabled            = true
-  tags                  = local.tags
 }
 
 resource "aws_cloudwatch_event_target" "spin_down_meadow_in_the_evening" {
