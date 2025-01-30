@@ -1,19 +1,7 @@
 {
-  "Comment": "Spin Up Meadow\nParameters: \n{\n    \"rds\": {\n      \"meadow\": \"meadow-db\"\n    }\n}",
-  "StartAt": "Ensure Meadow DB Available",
+  "Comment": "Spin Up Meadow",
+  "StartAt": "Spin Up Meadow",
   "States": {
-    "Ensure Meadow DB Available": {
-      "Type": "Task",
-      "Resource": "arn:aws:states:::states:startExecution.sync:2",
-      "Parameters": {
-        "StateMachineArn": "${ensure_db_instance_available_state_machine_arn}",
-        "Input": {
-          "DbInstanceIdentifier.$": "$$.Execution.Input.rds.meadow",
-          "CalledFrom.$": "$$.Execution.Id"
-        }
-      },
-      "Next": "Spin Up Meadow"
-    },
     "Spin Up Meadow": {
       "Type": "Task",
       "Resource": "arn:aws:states:::states:startExecution.sync:2",

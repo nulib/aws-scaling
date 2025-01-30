@@ -1,6 +1,5 @@
 locals {
   solr_collections   = ["arch", "avr"]
-  meadow_db_name      = "meadow-db"
 
   step_function_payload = jsonencode({
     solr = {
@@ -9,7 +8,6 @@ locals {
     }
 
     rds = {
-      meadow    = local.meadow_db_name
       stack     = module.data_services.outputs.postgres.instance_name
     }
   })
@@ -63,7 +61,6 @@ resource "aws_cloudwatch_event_target" "spin_up_in_the_morning" {
   rule        = aws_cloudwatch_event_rule.spin_up_in_the_morning.name
   target_id   = "SpinUpMeadow"
   arn         = aws_sfn_state_machine.spin_up_meadow.arn
-  input       = local.step_function_payload
   role_arn    = aws_iam_role.event_rule_step_function.arn
 }
 
@@ -79,7 +76,6 @@ resource "aws_cloudwatch_event_target" "spin_down_meadow_in_the_evening" {
   rule        = aws_cloudwatch_event_rule.spin_down_in_the_evening.name
   target_id   = "SpinDownMeadow"
   arn         = aws_sfn_state_machine.spin_down_meadow.arn
-  input       = local.step_function_payload
   role_arn    = aws_iam_role.event_rule_step_function.arn
 }
 
